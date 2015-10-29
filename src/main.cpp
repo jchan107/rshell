@@ -1,16 +1,15 @@
 // Melissa Castillo, mcast052 
 // Jeremy Chan, jchan107
 // CS100 ASSIGNMENT 1, main.cpp 
-
 #include <iostream> 
 #include <boost/tokenizer.hpp> 
 #include <string>
-#include <"connections.h"> 
-using namespace std;
-using namespace boost;
+#include "connections.h" 
 
 int main()
 {
+    using namespace std; 
+    using namespace boost; 
     string tkn_check;
     getline(cin,tkn_check);
 
@@ -56,15 +55,15 @@ int main()
     
     //outputs the vector
 
-    for(int i = 0; i < commands.size(); i++)
+    for(unsigned int i = 0; i < commands.size(); i++)
     {
         cout << "Command at vector " << i << " contains: " ;
-        for(int j = 0; j < commands.at(i).size();j++)
+        for(unsigned int j = 0; j < commands.at(i).size();j++)
         {
             cout << commands.at(i).at(j)<< " ";
         }
         cout << endl;
-    }   
+    }  
     
     //Vector that will hold objects of our class
     vector<Connectors *> args;   
@@ -75,23 +74,27 @@ int main()
         if(i == 0) 
         {
             //Sets bool to true, command always run
-            new Semicolon obj(1, commands.at(i) ); 
+            args.push_back(new Semicolon_Connector(1, commands.at(i) )); 
+            //args.push_back(obj);
         }
         else if(commands.at(i).at(0) == ";") 
         {
             //Gets vector<string> to the right
             //Does not take the actual sign 
-            new Semicolon obj(1, commands.at(i + 1);
+            args.push_back(new Semicolon_Connector(1, commands.at(i + 1)));
+           // args.push_back(obj);
         } 
         else if(commands.at(i).at(0) == "&&")
         { 
             //Sets bool to false, so it does not run w/o checking
-            new AND obj(0, commands.at(i + 1) ); 
+            args.push_back(new AND_Connector(0, commands.at(i + 1) )); 
+            //args.push_back(obj); 
         }
         else if(commands.at(i).at(0) == "||")
         {
             //Sets bool to true, so it does not run w/o checking   
-            new OR obj(1, commands.at(i + 1) ); 
+            args.push_back(new OR_Connector (1, commands.at(i + 1) ));
+            //args.push_back(obj);  
         }
     }    
     
@@ -99,11 +102,11 @@ int main()
     for(unsigned int i = 0; i < args.size(); i++)
     {
         //Dynamically calls appropriate execute() function
-        args.at(i).exectute();
+        args.at(i)->execute();
         //Variable holds whether the current command failed or succeeded
-        bool prev = args.at(i).check_prevstate(); 
+        bool prev = args.at(i)->get_prevstate(); 
         //Changes next command's bool to prev
-        args.at(i + 1).set_prevstate(prev); 
+        args.at(i + 1)->set_prevstate(prev); 
     }  
 
     //Deallocates objects and removes pointers
@@ -111,7 +114,9 @@ int main()
     { 
         delete args[i]; 
     } 
-    args.clear();     
-       
+    args.clear();
+
     return 0; 
-}
+}     
+
+
