@@ -37,7 +37,7 @@ int main()
         {
             //parses
             typedef tokenizer<char_separator<char> > tokenizer;
-            char_separator<char> sep(" $", ";#|&()[]");
+            char_separator<char> sep(" $", ";#|&()[]\"");
             tokenizer tkn(tkn_check,sep);
             bool error = false;
 
@@ -54,6 +54,7 @@ int main()
             vector<string> indivCommand;
 
             tokenizer::iterator iter2;
+            tokenizer::iterator ite3 = tkn.begin();
             bool ifHash = false;
             for(iter2 = tkn.begin();iter2 != tkn.end(); ++iter2)
             {
@@ -72,10 +73,122 @@ int main()
                         break;
                     }
                 }
+               
+                if(*iter2 == "echo")
+                {
+                    int numOfQuotes = 0;
+                    string tempQuote; 
+                    for(tokenizer::iterator echoiter = iter2;echoiter != tkn.end(); ++echoiter)
+                    {
+                        if(*echoiter == "\"")
+                        {
+                            numOfQuotes++;
+                            while(iter2 != echoiter)
+                            {
+                                if(*iter2 != "\"")
+                                {
+                                    if(*iter2 == "echo")
+                                    {
+                                        indivCommand.push_back(*iter2);
+                                    }
+                                    else
+                                    {
+                                        if(tempQuote == "")
+                                        {
+                                            tempQuote = *iter2;
+                                        }
+                                        else
+                                        {
+                                            tempQuote += " " + *iter2;
+                                        }
+                                    }
+                                }
+                                iter2++;
+                            }
+                            while(*iter2 != "\"")
+                            {
+                                indivCommand.push_back(*iter2);
+                                iter2++;
+                               break; 
+                            }
+                            if(tempQuote != "")
+                            {
+                                indivCommand.push_back(tempQuote);
+                            }
+                            tempQuote = "";
+                        }
+                        
+                    }
+                    if(numOfQuotes % 2 != 0)
+                    {
+                        cout << "Syntax error" << endl;
+                        error = true;
+                        break;
+                    }
+                }
+               
+          
                 if(*iter2 == "(")
                 {
                     while(*iter2 != ")")
                     {
+                        if(*iter2 == "echo")
+                        {
+                            int numOfQuotes;
+                            string tempQuote; 
+                            for(tokenizer::iterator echoiter = iter2;echoiter != tkn.end(); ++echoiter)
+                            {
+                                if(*echoiter == "\"")
+                                {
+                                    numOfQuotes++;
+                                    while(iter2 != echoiter)
+                                    {
+                                        if(*iter2 != "\"")
+                                        {
+                                            if(*iter2 == "echo")
+                                            {
+                                                indivCommand.push_back(*iter2);
+                                            }
+                                            else
+                                            {
+                                                if(tempQuote == "")
+                                                {
+                                                    tempQuote = *iter2;
+                                                }
+                                                else
+                                                {
+                                                    if(*iter2 != "\"")
+                                                    {
+                                                        tempQuote += " " + *iter2;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        iter2++;
+                                    }
+                                    while(*iter2 != "\"")
+                                    {
+                                        indivCommand.push_back(*iter2);
+                                        iter2++;
+                                        break; 
+                                    }
+                                    if(tempQuote != "")
+                                    {
+                                        indivCommand.push_back(tempQuote);
+                                    }
+                                    tempQuote = "";
+                                }
+                        
+                            }
+                            if(numOfQuotes % 2 != 0)
+                            {
+                                cout << "Syntax error" << endl;
+                                error = true;
+                                break;
+                            }
+
+                        }
+
                         if(*iter2 == ";" || *iter2 == "|" || *iter2 == "&")
                         {
                             if(*iter2 == "|" || *iter2 == "&")
@@ -223,10 +336,24 @@ int main()
                         }
                         else
                         {
-                            indivCommand.push_back(*iter2);
-                        }
-                        iter2++;
+                            if(*iter2 != "\"")
+                            {
+                                indivCommand.push_back(*iter2);
                             }
+                        }
+
+                        iter2++;
+                        if(iter2 == tkn.end())
+                        {
+                            cout << "Syntax error" << endl;
+                            error = true;
+                            break;
+                        }
+                    }
+                    if(error == true)
+                    {
+                        break;
+                    }
                             indivCommand.push_back(*iter2);
                             commands.push_back(indivCommand);
                             indivCommand.clear();
@@ -407,8 +534,13 @@ int main()
                 }
                 else
                 {
-                    indivCommand.push_back(*iter2);
+                   if(*iter2 != "\"")
+                   { 
+                      indivCommand.push_back(*iter2);
+                   }
                 }
+        
+                ite3++;
             }
             //makes sure hash doesnt go into the commands vector
             if(!indivCommand.empty() && ifHash == false)
@@ -417,7 +549,7 @@ int main()
             }
 
             //outputs the vector
-            
+            /*
             for(unsigned int i = 0; i < commands.size(); i++)
             {
                 cout << "Command at vector " << i << " contains: " ;
@@ -427,12 +559,11 @@ int main()
                 }
                 cout << endl;
             }  
-            
+            */
             vector<Connectors *> args;
             if(error == false && commands.size() > 0)
             {
-                //Vector that will hold objects of our class
-                unsigned int j = commands.size() - 1;   
+                //Vector that will hold objects of our class  
                 for(unsigned int i = 0; i < commands.size(); i++) 
                     //Traverses through outer vector 
                 {
@@ -446,9 +577,16 @@ int main()
                         commands.at(i).at(0) = "test";
                         commands.at(i).pop_back();
                     }
+                    else if(commands.at(i).at(0) == "[" && commands.at(i).at(commands.at(i).size() - 1) != "]")
+                    {
+                        cout << "Syntax error" << endl;
+                        error = true;
+                        break;
+                    }
                 }            
             }
 
+            
             for(unsigned int i = 0; i < commands.size(); i++)
             {
                 cout << "Command at vector " << i << " contains: " ;
@@ -457,7 +595,8 @@ int main()
                     cout << commands.at(i).at(j)<< " ";
                 }
                 cout << endl;
-            } 
+            }
+            
              
             if(error == false && commands.size() > 0)
             {
@@ -468,7 +607,7 @@ int main()
                 {
                     if(i == 0 && commands.at(i).at(0) == ";") 
                     {
-                        cout << "Syntax error near unexpected token ';'" << endl;
+                        cout << "Syntax error near unexpected token ';' not here" << endl;
                         error = true;
                         break; 
                     }
@@ -487,7 +626,7 @@ int main()
                     
                     else if(i == 0 && commands.at(i).at(0) == "()")
                     {
-                        args.push_back(new Paren(0, 0, 0, commands.at(i + 1) )); 
+                        args.push_back(new Paren(0, 0, 0, commands.at(i) )); 
                         error = args.at(args.size() - 1)->get_error(); 
                     }
                     //SPECIAL CASE: First command is always run
@@ -502,9 +641,17 @@ int main()
                             cout << "Syntax error" << endl;
                             error  = true;
                             break;
+                        }
+                        if(commands.at(i + 1).at(0) == "()")
+                        {
+                           args.push_back(new Paren(0, 0, 0, commands.at(i + 1) )); 
+                           error = args.at(args.size() - 1)->get_error(); 
                         } 
-                        args.push_back(new Semicolon_Connector(0, commands.at(i + 1))); 
-                    } 
+                        else
+                        {
+                            args.push_back(new Semicolon_Connector(0, commands.at(i + 1))); 
+                        } 
+                    }
                     else if(commands.at(i).at(0) == "&&")
                     { 
                         if(i == j) 
@@ -551,7 +698,7 @@ int main()
                         }   
                     }
                 }
-            }    
+            } 
 
             if(error == false && commands.size() > 0)
             {
@@ -590,5 +737,3 @@ int main()
     } while(!exitcheck); 
     return 0; 
 }     
-
-
