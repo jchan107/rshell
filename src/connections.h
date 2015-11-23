@@ -86,6 +86,28 @@ class Semicolon_Connector: public Connectors
            }           
            else if(first.compare(test_check) == 0)
            {
+                
+               int sz = test.size(); 
+                
+               if(sz == 1)
+               {
+                   cout << "Error: zero arguments" << endl; 
+                   set_prevstate(0); 
+                   return; 
+               }
+               const char * null_check = argv[1]; 
+               bool flag_check = test.at(1) == "-e" || test.at(1) == "-d" || test.at(1) == "-f"; 
+              
+               if(sz == 2 && null_check != NULL && flag_check)
+               {
+                  set_prevstate(1); 
+                  return; 
+               }
+               else if( sz == 2 && (null_check == NULL || !flag_check) )
+               {
+                  set_prevstate(0); 
+                  return; 
+               } 
                struct stat sb; 
                if(stat(argv[2], &sb) == -1) 
                {
@@ -112,29 +134,37 @@ class Semicolon_Connector: public Connectors
                        if_dir = true;  
                    }
                } 
-
+                
+               
                if(if_exists)
                {
                    set_prevstate(1); 
+                   return; 
                }
-               if(if_reg && S_ISREG(sb.st_mode))
+               mode_t val = sb.st_mode & S_IFMT; 
+               if(val & S_IFREG)
                {
                    set_prevstate(1); 
+                   return; 
                }
-               else 
+               else if(if_reg == 1 && !(val & S_IFREG) )
                {
-                   set_prevstate(0); 
+                   //cout << "not reg" << endl; 
+                   set_prevstate(0);  
                }
-               if(if_dir && S_ISDIR(sb.st_mode))
+               if(val & S_IFDIR)
                {
                    set_prevstate(1); 
+                   return; 
                }
-               else
+               else if(if_dir == 1 &&!(val & S_IFDIR ))
                {
-                   set_prevstate(0); 
+                   //cout << "not dir" << endl; 
+                   set_prevstate(0);
+                   return;  
                }
-
-               return; 
+               set_prevstate(0); 
+              return; 
            }               
 
            //Always executes, no matter if the previous 
@@ -225,6 +255,26 @@ class AND_Connector: public Connectors
                }
                else if(first.compare(test_check) == 0)
                {
+                   int sz = test.size(); 
+       
+                   if (sz == 1)
+                   {
+                       cout << "Error: zero arguments" << endl; 
+                       set_prevstate(0); 
+                       return; 
+                   }
+                   bool flag_check = test.at(1) == "-e" || test.at(1) == "-d" || test.at(1) == "-f"; 
+                   const char * null_check = argv[1]; 
+                   if(sz == 2 && null_check != NULL && flag_check)
+                   {
+                        set_prevstate(1); 
+                        return; 
+                   }
+                   else if(sz == 2 && (null_check == NULL || !flag_check) )
+                   {
+                       set_prevstate(0); 
+                       return; 
+                   }
                    struct stat sb; 
                    if(stat(argv[2], &sb) == -1) 
                    {
@@ -251,27 +301,35 @@ class AND_Connector: public Connectors
                            if_dir = true;  
                        }
                    } 
+                   mode_t val = sb.st_mode & S_IFMT; 
 
                    if(if_exists)
                    {
                        set_prevstate(1); 
+                       return; 
                    }
-                   if(if_reg && S_ISREG(sb.st_mode))
+                   if(val & S_IFREG)
                    {
                        set_prevstate(1); 
+                       return; 
                    }
-                   else 
+                   else if( if_reg == 1 && !(val & S_IFREG)) 
                    {
                        set_prevstate(0); 
+                       return; 
                    }
-                   if(if_dir && S_ISDIR(sb.st_mode))
+                   if(val & S_IFDIR)
                    {
                        set_prevstate(1); 
+                       return; 
                    }
-                   else
+                   else if(if_dir == 1 && !(val & S_IFDIR))
                    {
                        set_prevstate(0); 
+                       return; 
                    }
+                   set_prevstate(0); 
+                   return; 
                }
                    pid_t c_pid = fork(); //Child's process ID
                    pid_t pid; //Parent's process ID  
@@ -361,6 +419,27 @@ class OR_Connector: public Connectors
                 }
                 else if(first.compare(test_check) == 0)
                 {
+                    int sz = test.size(); 
+                    
+                    if(sz == 1)
+                    {
+                        cout << "Error: zero arguments" << endl; 
+                        set_prevstate(0); 
+                        return; 
+                    }
+                    const char * null_check = argv[1]; 
+                    bool flag_check = (test.at(1) == "-e" || test.at(1) == "-f" || test.at(1) == "-d");
+
+                    if(sz  == 2 && null_check != NULL && flag_check)
+                    {
+                        set_prevstate(1); 
+                        return; 
+                    }
+                    else if(sz == 2 && (null_check == NULL || !flag_check))
+                    {
+                        set_prevstate(0); 
+                        return; 
+                    }
                     struct stat sb; 
                     if(stat(argv[2], &sb) == -1) 
                     {
@@ -391,23 +470,31 @@ class OR_Connector: public Connectors
                     if(if_exists)
                     {
                         set_prevstate(1); 
+                        return; 
                     }
-                    if(if_reg && S_ISREG(sb.st_mode))
+                    mode_t val = sb.st_mode & S_IFMT; 
+                    if(val & S_IFREG)
                     {
                         set_prevstate(1); 
+                        return; 
                     }
-                    else 
+                    else if(if_reg == 1 && !(val & S_IFREG)) 
                     {
                         set_prevstate(0); 
+                        return; 
                     }
-                    if(if_dir && S_ISDIR(sb.st_mode))
+                    if(val & S_IFDIR)
                     {
                         set_prevstate(1); 
+                        return; 
                     }
-                    else
+                    else if(if_dir == 1 && !(val & S_IFDIR))
                     {
                         set_prevstate(0); 
+                        return; 
                     }
+                    set_prevstate(0); 
+                    return; 
                 }
                     //Execute command (only when previous command fails
                     pid_t c_pid = fork(); //Child's process ID
@@ -477,7 +564,7 @@ class Paren: public Connectors
             vector< vector<string> > commands;
             vector<string> indivcommand;
             bool ifHash = false;   
-            for(unsigned int i = 0; i < com.size(); i++)
+            for(unsigned int i = 1; i < com.size(); i++)
             {    
                 if(com.at(i) == "#")
                 {
@@ -538,9 +625,9 @@ class Paren: public Connectors
                 commands.push_back(indivcommand); 
             }
 
-            /*
+            /*            
             //outputs the vector
-            cout << "CHECK 2" << endl; 
+            //cout << "CHECK 2" << endl; 
             for(unsigned int i = 0; i < commands.size(); i++)
             {
                 cout << "Command at vector " << i << " contains: " ;
@@ -551,7 +638,7 @@ class Paren: public Connectors
                 cout << endl;
             } 
 
-            cout << "CHECK 3" << endl; 
+            //cout << "CHECK 3" << endl; 
             */
             unsigned int j = commands.size() - 1;   
             for(unsigned int i = 0; i < commands.size(); i++) 
